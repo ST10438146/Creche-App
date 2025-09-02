@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:padding="16dp"
+    android:background="#F0F4F8"
+    tools:context=".AdminHomeActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Admin Dashboard"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#1A202C"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="24dp" />
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:cardCornerRadius="12dp"
+        android:cardElevation="4dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Welcome, Admin!"
+                android:textSize="20sp"
+                android:textStyle="italic"
+                android:textColor="#4A5568"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="16dp" />
+            <Button
+                android:id="@+id/manageUsersButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Manage Users"
+                android:backgroundTint="#4299E1"
+                android:textColor="#FFFFFF"
+                android:padding="12dp"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                android:layout_marginBottom="8dp"/>
+            <!-- Add other admin features here -->
+            <Button
+                android:id="@+id/logoutButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Logout"
+                android:backgroundTint="#F56565"
+                android:textColor="#FFFFFF"
+                android:padding="12dp"
+                android:textAllCaps="false"
+                android:textSize="16sp"/>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</LinearLayout>

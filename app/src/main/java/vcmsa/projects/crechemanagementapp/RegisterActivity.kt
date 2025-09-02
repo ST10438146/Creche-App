@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Patterns
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -203,7 +204,7 @@ class RegisterActivity : AppCompatActivity() {
                 etParentEmail.error = "Email is required"
                 return false
             }
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+            !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
                 etParentEmail.error = "Invalid email format"
                 return false
             }
@@ -255,7 +256,7 @@ class RegisterActivity : AppCompatActivity() {
     private fun updateNextButton() {
         btnNext.isEnabled = when (currentStep) {
             1 -> etParentName.text.isNotEmpty() && etParentEmail.text.isNotEmpty() &&
-                    android.util.Patterns.EMAIL_ADDRESS.matcher(etParentEmail.text.toString().trim()).matches() &&
+                    Patterns.EMAIL_ADDRESS.matcher(etParentEmail.text.toString().trim()).matches() &&
                     etParentPhone.text.isNotEmpty() && etRegisterPassword.text.length >= 6
             2 -> etChildName.text.isNotEmpty() && etChildAge.text.isNotEmpty()
             3 -> etEmergencyContact.text.isNotEmpty()
@@ -304,7 +305,7 @@ class RegisterActivity : AppCompatActivity() {
                             name = parentName,
                             email = email,
                             phone = parentPhone,
-                            role = UserRole.PARENT, // Default role for registration
+                            role = UserRole.PARENT.name, // Default role for registration
                             profileImageUrl = "", // Can be updated later
                             isActive = true,
                             createdAt = System.currentTimeMillis()
@@ -312,7 +313,8 @@ class RegisterActivity : AppCompatActivity() {
 
                         // 3. Create Child object for Firestore
                         val newChild = Child(
-                            id = firestoreDb.collection("children").document().id, // Generate a new ID for the child
+                            id = firestoreDb.collection("children")
+                                .document().id, // Generate a new ID for the child
                             name = childName,
                             parentId = userId, // Link child to parent's Firebase UID
                             teacherId = "", // Assign teacher later
@@ -321,7 +323,8 @@ class RegisterActivity : AppCompatActivity() {
                             medicalNotes = "",
                             emergencyContact = emergencyContact,
                             profileImageUrl = "", // Can be updated later
-                            isActive = true
+                            isActive = true,
+                            childId = TODO()
                         )
 
                         // Use a Batch Write for atomic operations: Save User and Child data

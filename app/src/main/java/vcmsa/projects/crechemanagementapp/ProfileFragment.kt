@@ -96,7 +96,10 @@ class ProfileFragment : Fragment() {
                         user?.let {
                             tvUserName.text = it.name
                             tvUserEmail.text = it.email
-                            tvUserRole.text = it.role.name.lowercase().replaceFirstChar { char -> char.uppercase() }
+                            tvUserRole.text = it.role
+                                .lowercase()
+                                .replaceFirstChar { ch -> ch.titlecase() }
+
 
                             // Load profile image if URL exists
                             // if (it.profileImageUrl.isNotEmpty()) {

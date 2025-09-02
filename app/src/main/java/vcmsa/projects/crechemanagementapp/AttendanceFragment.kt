@@ -14,8 +14,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import java.util.*
-import java.util.*
 import androidx.core.content.ContextCompat // Required for getColor
 
 class AttendanceFragment : Fragment() {
@@ -62,7 +60,7 @@ class AttendanceFragment : Fragment() {
 
         // Handle parent-specific child ID loading after sharedPrefManager is initialized
         val currentUser = sharedPrefManager.getUser()
-        if (currentUser?.role == UserRole.PARENT) {
+        if (currentUser?.role?.equals(UserRole.PARENT.name, ignoreCase = true) == true) {
             currentUserId?.let { parentId ->
                 firestoreDb.collection("children")
                     .whereEqualTo("parentId", parentId)

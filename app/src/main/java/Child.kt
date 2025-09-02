@@ -14,5 +14,15 @@ data class Child(
     val medicalNotes: String = "",
     val emergencyContact: String = "",
     val profileImageUrl: String = "",
+    val childId: String,
     val isActive: Boolean = true
 ) : Parcelable
+/**
+ * An enum class to define the different user roles.
+ * Using an enum makes it easy to manage roles and avoid string typos.
+ */
+enum class Role {
+    ADMIN,
+    STAFF,
+    PARENT
+}

@@ -71,7 +71,7 @@ class HomeFragment : Fragment() {
                             tvWelcome.text = "Welcome back, ${it.name}!"
 
                             // Setup quick stats based on user role
-                            when (it.role) {
+                            when (runCatching { UserRole.valueOf(it.role.uppercase()) }.getOrNull()) {
                                 UserRole.PARENT -> {
                                     // For parents, fetch child status from Firestore
                                     firestoreDb.collection("children")
@@ -111,6 +111,7 @@ class HomeFragment : Fragment() {
                                         }
                                     }
                                 }
+                                else -> { /* sensible default */ }
                             }
                             // Load profile image (if any) - not fully implemented in this beginner solution
                             // if (it.profileImageUrl.isNotEmpty()) {
