@@ -12,7 +12,6 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:fontFamily="@font/montserrat_bold"
         android:text="User Management"
         android:textColor="#334155"
         android:textSize="24sp"

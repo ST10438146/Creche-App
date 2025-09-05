@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="saveAttendanceButton" type="id">saveAttendanceButton</item>
-    <item name="tvAttendanceTitle" type="id">tvAttendanceTitle</item>
-    <item name="attendanceRecyclerView" type="id">attendanceRecyclerView</item>
-    <item name="tvEmptyState" type="id">tvEmptyState</item>
-    <item name="attendanceProgressBar" type="id">attendanceProgressBar</item>
-
+    <item name="saveAttendanceButton" type="id"/>
+    <item name="tvAttendanceTitle" type="id"/>
+    <item name="attendanceRecyclerView" type="id"/>
+    <item name="tvEmptyState" type="id"/>
 </resources>

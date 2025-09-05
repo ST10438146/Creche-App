@@ -32,6 +32,6 @@
     <Spinner
         android:id="@+id/roleSpinner"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:spinnerMode="dropdown"/>
+        android:layout_height="62dp"
+        android:spinnerMode="dropdown" />
 </LinearLayout>
