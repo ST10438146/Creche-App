@@ -7,10 +7,6 @@ import android.text.InputType
 import android.text.TextWatcher
 import android.util.Log
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
@@ -38,7 +34,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
-        setContentView(binding.root) // Use binding.root for ViewBinding
+        setContentView(binding.root)
 
         // Initialize Firebase instances
         firestoreDb = FirebaseFirestore.getInstance()
@@ -89,7 +85,8 @@ class LoginActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT).show()
                     val storedUser = sharedPrefManager.getUser()
                     if (storedUser != null) {
-                        navigateToHome()
+                        // Stored user exists; navigate to Home (shared)
+                        navigateToHome(UserRole.valueOf(storedUser.role ?: UserRole.PARENT.name))
                     } else {
                         Toast.makeText(applicationContext, "No stored user data for biometric login. Please log in with email/password first.", Toast.LENGTH_LONG).show()
                     }
@@ -111,7 +108,10 @@ class LoginActivity : AppCompatActivity() {
     private fun setupClickListeners() {
         binding.btnLogin.setOnClickListener { performLogin() }
         binding.tvSignUp.setOnClickListener {
-            startActivity(Intent(this, RegisterActivity::class.java))
+            val intent = Intent(this, RegisterActivity::class.java)
+            // pass currently selected user type from login (selectedUserType exists in LoginActivity)
+            intent.putExtra("USER_ROLE", selectedUserType.name) // ADMIN/STAFF/PARENT
+            startActivity(intent)
         }
         binding.togglePassword.setOnClickListener { togglePasswordVisibility() }
         binding.biometricIcon.setOnClickListener {
@@ -178,26 +178,42 @@ class LoginActivity : AppCompatActivity() {
                                     val userRoleString = document.getString("role")
                                     val actualUserRole = try {
                                         UserRole.valueOf(userRoleString ?: UserRole.PARENT.name)
-                                    } catch (e: IllegalArgumentException) {
+                                    } catch (e: Exception) {
                                         UserRole.PARENT
                                     }
 
-                                    // Safely retrieve the profileImageUrl and other fields
+                                    // Safely retrieve other fields
                                     val profileImageUrl = document.getString("profileImageUrl") ?: ""
                                     val name = document.getString("name") ?: ""
                                     val phone = document.getString("phone") ?: ""
+                                    val roleToStore = actualUserRole.name
 
-
+                                    // Build the User object using your model; set both uid and id
                                     val loggedInUser = User(
+                                        uid = firebaseUser.uid,
                                         id = firebaseUser.uid,
                                         name = name,
                                         email = firebaseUser.email ?: "",
                                         phone = phone,
-                                        profileImageUrl = profileImageUrl
+                                        role = roleToStore,
+                                        profileImageUrl = profileImageUrl,
+                                        isEnabled = document.getBoolean("isEnabled") ?: true,
+                                        isActive = document.getBoolean("isActive") ?: true,
+                                        createdAt = document.getLong("createdAt") ?: System.currentTimeMillis()
                                     )
-                                    sharedPrefManager.saveUser(loggedInUser)
+
+                                    // Save to shared prefs
+                                    try {
+                                        sharedPrefManager.saveUser(loggedInUser)
+                                    } catch (e: Exception) {
+                                        Log.w("LoginActivity", "Failed to save user to SharedPref: ${e.message}")
+                                    }
+
                                     Toast.makeText(baseContext, "Authentication successful.", Toast.LENGTH_SHORT).show()
-                                    navigateToHome()
+                                    showLoading(false)
+
+                                    // Navigate based on role:
+                                    navigateToHome(actualUserRole)
                                 } else {
                                     Toast.makeText(baseContext, "User data not found in Firestore.", Toast.LENGTH_SHORT).show()
                                     auth.signOut()
@@ -209,6 +225,10 @@ class LoginActivity : AppCompatActivity() {
                                 auth.signOut()
                                 showLoading(false)
                             }
+                    } ?: run {
+                        // Shouldn't happen but handle defensively
+                        Toast.makeText(baseContext, "Login successful but no firebase user found.", Toast.LENGTH_SHORT).show()
+                        showLoading(false)
                     }
                 } else {
                     Toast.makeText(baseContext, "Authentication failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
@@ -222,8 +242,12 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.text = if (show) "Logging in..." else "Log In"
     }
 
-    private fun navigateToHome() {
-        startActivity(Intent(this, HomeActivity::class.java))
+    // Route users: ADMIN -> AdminHomeActivity, STAFF/PARENT -> HomeActivity
+    private fun navigateToHome(role: UserRole) {
+        when (role) {
+            UserRole.ADMIN -> startActivity(Intent(this, AdminHomeActivity::class.java))
+            UserRole.STAFF, UserRole.PARENT -> startActivity(Intent(this, HomeActivity::class.java))
+        }
         finish()
     }
 }
