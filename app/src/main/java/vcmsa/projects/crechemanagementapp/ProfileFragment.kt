@@ -1,19 +1,19 @@
 package vcmsa.projects.crechemanagementapp
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.content.Intent
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-// import com.bumptech.glide.Glide // For loading images from URL, add dependency if you use this
-
+// import com.bumptech.glide.Glide // Uncomment if you add Glide dependency
 
 class ProfileFragment : Fragment() {
 
@@ -28,6 +28,8 @@ class ProfileFragment : Fragment() {
 
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firestoreDb: FirebaseFirestore
+
+    private val TAG = "ProfileFragment"
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -63,7 +65,7 @@ class ProfileFragment : Fragment() {
     private fun setupClickListeners() {
         btnEditProfile.setOnClickListener {
             Toast.makeText(context, "Edit Profile (Not implemented yet)", Toast.LENGTH_SHORT).show()
-            // Implement logic to edit user profile data in Firestore
+            // Implement logic to edit user profile data in Firestore (open edit screen)
         }
 
         btnSettings.setOnClickListener {
@@ -87,6 +89,7 @@ class ProfileFragment : Fragment() {
                 .document(currentUser.uid)
                 .addSnapshotListener { snapshot, e ->
                     if (e != null) {
+                        Log.w(TAG, "Profile listener error: ${e.message}")
                         Toast.makeText(context, "Error loading profile: ${e.message}", Toast.LENGTH_SHORT).show()
                         return@addSnapshotListener
                     }
@@ -94,24 +97,32 @@ class ProfileFragment : Fragment() {
                     if (snapshot != null && snapshot.exists()) {
                         val user = snapshot.toObject(User::class.java)
                         user?.let {
-                            tvUserName.text = it.name
-                            tvUserEmail.text = it.email
-                            tvUserRole.text = it.role
-                                .lowercase()
-                                .replaceFirstChar { ch -> ch.titlecase() }
+                            tvUserName.text = it.name.ifEmpty { "No name" }
+                            tvUserEmail.text = it.email.ifEmpty { "No email" }
 
+                            // Format role: e.g., "PARENT" -> "Parent"
+                            val rawRole = it.role ?: ""
+                            if (rawRole.isNotBlank()) {
+                                tvUserRole.text = rawRole.lowercase().replaceFirstChar { ch -> ch.titlecase() }
+                            } else {
+                                tvUserRole.text = ""
+                            }
 
-                            // Load profile image if URL exists
-                            // if (it.profileImageUrl.isNotEmpty()) {
-                            //     Glide.with(this).load(it.profileImageUrl).into(ivProfileImage)
-                            // } else {
-                            //     ivProfileImage.setImageResource(R.drawable.ic_profile_placeholder)
-                            // }
+                            // Load profile image if URL exists (uncomment if using Glide)
+                            if (it.profileImageUrl.isNotEmpty()) {
+                                // Glide.with(this).load(it.profileImageUrl).into(ivProfileImage)
+                            } else {
+                                ivProfileImage.setImageResource(R.drawable.ic_profile_placeholder)
+                            }
+                        } ?: run {
+                            Log.w(TAG, "User object was null after snapshot toObject()")
+                            Toast.makeText(context, "Profile data missing.", Toast.LENGTH_SHORT).show()
                         }
                     } else {
+                        Log.w(TAG, "Profile snapshot missing or does not exist")
                         Toast.makeText(context, "Profile data missing.", Toast.LENGTH_SHORT).show()
                         // Optionally force re-login if crucial data is missing
-                        performLogout()
+                        // performLogout()
                     }
                 }
         } else {
@@ -124,10 +135,24 @@ class ProfileFragment : Fragment() {
      * Logs out the user from Firebase and navigates to the Login screen.
      */
     private fun performLogout() {
-        sharedPrefManager.logout() // This now calls firebaseAuth.signOut() internally
+        // Clear saved user from SharedPrefManager
+        try {
+            sharedPrefManager.clearUser()
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to clear SharedPref user: ${e.message}")
+        }
+
+        // Sign out Firebase auth
+        try {
+            firebaseAuth.signOut()
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to sign out FirebaseAuth: ${e.message}")
+        }
+
+        // Navigate to login and clear back stack
         val intent = Intent(requireContext(), LoginActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK // Clear back stack
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
-        requireActivity().finish() // Finish current activity
+        requireActivity().finish()
     }
 }

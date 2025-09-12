@@ -15,6 +15,7 @@ import java.util.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.core.content.ContextCompat // Required for getColor
+import com.google.firebase.firestore.ListenerRegistration
 
 class AttendanceFragment : Fragment() {
 
@@ -34,6 +35,7 @@ class AttendanceFragment : Fragment() {
 
     private lateinit var attendanceAdapter: AttendanceAdapter
     private val attendanceList = mutableListOf<Attendance>()
+    private var attendanceListener: ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,

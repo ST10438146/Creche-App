@@ -1,63 +1,49 @@
 package vcmsa.projects.crechemanagementapp
 
-import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import android.content.Intent
+import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
-import vcmsa.projects.crechemanagementapp.databinding.ActivityParentHomeBinding
 
 class ParentHomeActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityParentHomeBinding
+    private val TAG = "ParentHomeActivity"
+    private lateinit var sharedPrefManager: SharedPrefManager
     private val auth = FirebaseAuth.getInstance()
-    private val db = Firebase.firestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityParentHomeBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(R.layout.activity_home)
 
-        binding.logoutButton.setOnClickListener {
-            auth.signOut()
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
-            finish()
+        sharedPrefManager = SharedPrefManager.getInstance(this)
+
+        // Try to get user from SharedPrefManager, fallback to FirebaseAuth
+        val user = sharedPrefManager.getUser() ?: auth.currentUser?.let { fu ->
+            User(
+                uid = fu.uid,
+                id = fu.uid,
+                name = fu.displayName ?: fu.email ?: "Parent",
+                email = fu.email ?: "",
+                phone = "",
+                role = UserRole.PARENT.name
+            )
         }
 
-        binding.viewChildDetailsButton.setOnClickListener {
-            val parentUid = auth.currentUser?.uid
-            if (parentUid != null) {
-                db.collection("users").document(parentUid)
-                    .get()
-                    .addOnSuccessListener { document ->
-                        if (document.exists()) {
-                            val childId = document.getString("childId")
-                            if (childId != null) {
-                                val intent = Intent(this, ChildDetailsActivity::class.java)
-                                intent.putExtra("CHILD_ID", childId)
-                                startActivity(intent)
-                            } else {
-                                Toast.makeText(this, "Child ID not found.", Toast.LENGTH_SHORT).show()
-                                Log.w("ParentHome", "Child ID not found for parent: $parentUid")
-                            }
-                        } else {
-                            Toast.makeText(this, "User document not found.", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                    .addOnFailureListener { e ->
-                        Toast.makeText(this, "Failed to get user data.", Toast.LENGTH_SHORT).show()
-                        Log.e("ParentHome", "Error fetching user document", e)
-                    }
-            } else {
-                Toast.makeText(this, "User not authenticated.", Toast.LENGTH_SHORT).show()
-            }
+        // Welcome toast (non-blocking)
+        val userName = user?.name ?: "Parent"
+        Toast.makeText(this, "Welcome, $userName", Toast.LENGTH_SHORT).show()
+
+        // Set up bottom navigation
+        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
+        if (bottomNavigation == null) {
+            Log.w(TAG, "bottomNavigation view not found in activity_home.xml")
+            return
         }
+
+       }
     }
-}
+
+
