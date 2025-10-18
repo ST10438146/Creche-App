@@ -102,15 +102,21 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
 
+                        <!-- Quick Actions: ATTENDANCE -->
                         <LinearLayout
+                            android:id="@+id/llQuickAttendance"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:gravity="center"
-                            android:padding="16dp">
+                            android:padding="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?attr/selectableItemBackgroundBorderless">
 
                             <ImageView
+                                android:id="@+id/ivQuickAttendance"
                                 android:layout_width="32dp"
                                 android:layout_height="32dp"
                                 android:src="@drawable/ic_attendance"
@@ -123,9 +129,9 @@
                                 android:text="Attendance"
                                 android:textSize="12sp"
                                 android:textColor="@color/text_secondary"
-                                android:layout_marginTop="8dp" />
-
+                                android:layout_marginTop="8dp"/>
                         </LinearLayout>
+
 
                         <LinearLayout
                             android:layout_width="0dp"

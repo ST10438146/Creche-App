@@ -92,13 +92,18 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
+                    <!-- Attendance -->
                     <LinearLayout
+                        android:id="@+id/llQuickAttendance"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="16dp">
+                        android:padding="16dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless">
 
                         <ImageView
                             android:layout_width="32dp"
@@ -114,16 +119,20 @@
                             android:textSize="12sp"
                             android:textColor="@color/text_secondary"
                             android:layout_marginTop="8dp" />
-
                     </LinearLayout>
 
+                    <!-- Events -->
                     <LinearLayout
+                        android:id="@+id/llQuickEvents"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="16dp">
+                        android:padding="16dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless">
 
                         <ImageView
                             android:layout_width="32dp"
@@ -139,16 +148,20 @@
                             android:textSize="12sp"
                             android:textColor="@color/text_secondary"
                             android:layout_marginTop="8dp" />
-
                     </LinearLayout>
 
+                    <!-- Payments -->
                     <LinearLayout
+                        android:id="@+id/llQuickPayments"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="16dp">
+                        android:padding="16dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless">
 
                         <ImageView
                             android:layout_width="32dp"
@@ -164,16 +177,20 @@
                             android:textSize="12sp"
                             android:textColor="@color/text_secondary"
                             android:layout_marginTop="8dp" />
-
                     </LinearLayout>
 
+                    <!-- Messages -->
                     <LinearLayout
+                        android:id="@+id/llQuickMessages"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="16dp">
+                        android:padding="16dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless">
 
                         <ImageView
                             android:layout_width="32dp"
@@ -189,7 +206,6 @@
                             android:textSize="12sp"
                             android:textColor="@color/text_secondary"
                             android:layout_marginTop="8dp" />
-
                     </LinearLayout>
 
                 </LinearLayout>
@@ -197,6 +213,7 @@
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
+
 
         <!-- Recent Activities -->
         <TextView
