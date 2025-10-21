@@ -13,7 +13,6 @@ import android.widget.TextView
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-// import com.bumptech.glide.Glide // Uncomment if you add Glide dependency
 
 class ProfileFragment : Fragment() {
 
@@ -64,18 +63,22 @@ class ProfileFragment : Fragment() {
 
     private fun setupClickListeners() {
         btnEditProfile.setOnClickListener {
-            Toast.makeText(context, "Edit Profile (Not implemented yet)", Toast.LENGTH_SHORT).show()
-            // Implement logic to edit user profile data in Firestore (open edit screen)
+            val intent = Intent(requireContext(), EditProfileActivity::class.java)
+            startActivity(intent)
         }
 
         btnSettings.setOnClickListener {
-            Toast.makeText(context, "Settings (Not implemented yet)", Toast.LENGTH_SHORT).show()
-            // Implement logic for app settings
+            val intent = Intent(requireContext(), SettingsActivity::class.java)
+            startActivity(intent)
         }
 
         btnLogout.setOnClickListener {
             performLogout()
         }
+    }
+    override fun onResume() {
+        super.onResume()
+        loadUserData()
     }
 
     /**

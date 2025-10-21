@@ -7,4 +7,6 @@
 
     <string name="another_message">Missing closing quote</string>
     <string name="error_message">Something went &lt;wrong&gt;</string>
+    <string name="profile_image">Upload Profile Image &lt;wrong&gt;</string>
+
 </resources>

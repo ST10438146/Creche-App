@@ -69,8 +69,8 @@ dependencies {
     //Firebase
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database)
-    implementation(libs.firebase.firestore.ktx)
     implementation(libs.firebase.inappmessaging)
+    implementation(libs.firebase.firestore)
 
     // Testing
     testImplementation(libs.junit)

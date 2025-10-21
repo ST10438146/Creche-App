@@ -167,7 +167,7 @@ class PaymentsFragment : Fragment() {
 
         // Your server endpoint that returns { payfastUrl, payload, signature }
         val request = Request.Builder()
-            .url("https://payfast-sever.onrender.com")
+            .url("https://payfast-sever.onrender.com/create-payfast-payment")
             .post(requestBody)
             .build()
 

@@ -27,6 +27,30 @@ class SharedPrefManager private constructor(context: Context) {
     fun clearUser() {
         sharedPreferences.edit().remove(KEY_USER).apply()
     }
+    fun setBiometricEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean("biometric_enabled", enabled).apply()
+    }
+
+    fun isBiometricEnabled(): Boolean {
+        return sharedPreferences.getBoolean("biometric_enabled", false)
+    }
+
+    fun setDarkModeEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean("dark_mode", enabled).apply()
+    }
+
+    fun isDarkModeEnabled(): Boolean {
+        return sharedPreferences.getBoolean("dark_mode", false)
+    }
+
+    fun setNotificationsEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean("notifications_enabled", enabled).apply()
+    }
+
+    fun areNotificationsEnabled(): Boolean {
+        return sharedPreferences.getBoolean("notifications_enabled", true)
+    }
+
 
     companion object {
         private const val PREF_NAME = "creche_prefs"
