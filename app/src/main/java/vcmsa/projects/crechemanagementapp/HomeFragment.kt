@@ -139,12 +139,16 @@ class HomeFragment : Fragment() {
         // Attendance quick action
         llQuickAttendance.setOnClickListener {
             try {
-                // Prefer fragment navigation if container exists; fallback to activity if needed
-                if (activity?.findViewById<View>(R.id.fragmentContainer) != null) {
-                    navigateToFragment(AttendanceFragment())
+                val host = activity
+                if (host is HomeActivity) {
+                    host.openAttendance()
                 } else {
-                    // Fallback: start an Activity if you prefer (AttendanceManagementActivity exists in the project)
-                    startActivity(Intent(requireContext(), AttendanceManagementActivity::class.java))
+                    // fallback (same as before)
+                    parentFragmentManager.beginTransaction()
+                        .setReorderingAllowed(true)
+                        .replace(R.id.fragmentContainer, AttendanceFragment())
+                        .addToBackStack(null)
+                        .commit()
                 }
             } catch (ex: Exception) {
                 Log.e(TAG, "Failed to navigate to Attendance", ex)
@@ -152,31 +156,44 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // Events quick action
+// Events quick action
         llQuickEvents.setOnClickListener {
-            try {
-                navigateToFragment(EventsFragment())
-            } catch (ex: Exception) {
-                Log.e(TAG, "Failed to navigate to Events", ex)
-                Toast.makeText(requireContext(), "Unable to open Events", Toast.LENGTH_SHORT).show()
+            val host = activity
+            if (host is HomeActivity) {
+                host.openEvents()
+            } else {
+                parentFragmentManager.beginTransaction()
+                    .setReorderingAllowed(true)
+                    .replace(R.id.fragmentContainer, EventsFragment())
+                    .addToBackStack(null)
+                    .commit()
             }
         }
 
-        // Payments quick action
+// Payments quick action
         llQuickPayments.setOnClickListener {
-            try {
-                navigateToFragment(PaymentsFragment())
-            } catch (ex: Exception) {
-                Log.e(TAG, "Failed to navigate to Payments", ex)
-                Toast.makeText(requireContext(), "Unable to open Payments", Toast.LENGTH_SHORT).show()
+            val host = activity
+            if (host is HomeActivity) {
+                host.openPayments()
+            } else {
+                parentFragmentManager.beginTransaction()
+                    .setReorderingAllowed(true)
+                    .replace(R.id.fragmentContainer, PaymentsFragment())
+                    .addToBackStack(null)
+                    .commit()
             }
         }
 
-        // Messages quick action — no Messages screen in repo: show toast or open a MessagesActivity when implemented
+// Messages quick action
         llQuickMessages.setOnClickListener {
-            Toast.makeText(requireContext(), "Messages not implemented yet.", Toast.LENGTH_SHORT).show()
-            // TODO: replace with navigateToFragment(MessagesFragment()) or startActivity(Intent(...))
+            val host = activity
+            if (host is HomeActivity) {
+                host.openMessages()
+            } else {
+                Toast.makeText(requireContext(), "Messages not implemented yet.", Toast.LENGTH_SHORT).show()
+            }
         }
+
     }
 
     private fun setupQuickStatsForRole(rawRole: String, userId: String) {

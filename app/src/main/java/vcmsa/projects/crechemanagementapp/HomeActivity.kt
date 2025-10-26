@@ -1,5 +1,6 @@
 package vcmsa.projects.crechemanagementapp
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -130,7 +131,7 @@ class HomeActivity : AppCompatActivity() {
         try {
             bottomNavigation?.selectedItemId = R.id.nav_home
         } catch (e: Exception) {
-            // ignore if id not present
+            // ignore if id not present.
         }
     }
 
@@ -150,11 +151,11 @@ class HomeActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_attendance -> {
-                    if (hasFragmentContainer) loadFragmentSafe(AttendanceFragment()) else showPlaceholder("Attendance")
+                    if (hasFragmentContainer) openAttendance() else showPlaceholder("Attendance")
                     true
                 }
                 R.id.nav_events -> {
-                    if (hasFragmentContainer) loadFragmentSafe(EventsFragment()) else showPlaceholder("Events")
+                    if (hasFragmentContainer) openEvents() else showPlaceholder("Events")
                     true
                 }
                 R.id.nav_profile -> {
@@ -181,15 +182,16 @@ class HomeActivity : AppCompatActivity() {
      * Perform fragment transaction only when fragmentContainer exists.
      * This avoids the crash you saw from calling replace(...) when container is missing.
      */
-    private fun loadFragmentSafe(fragment: Fragment) {
+    private fun loadFragmentSafe(fragment: Fragment, addToBackStack: Boolean = false) {
         if (!hasFragmentContainer) {
             Log.w(TAG, "Attempted to load fragment but no fragmentContainer in layout")
             return
         }
-        supportFragmentManager.beginTransaction()
+        val tx = supportFragmentManager.beginTransaction()
             .setReorderingAllowed(true)
             .replace(R.id.fragmentContainer, fragment)
-            .commit()
+        if (addToBackStack) tx.addToBackStack(null)
+        tx.commit()
     }
 
     private fun performLogout() {
@@ -197,5 +199,100 @@ class HomeActivity : AppCompatActivity() {
         try { FirebaseAuth.getInstance().signOut() } catch (e: Exception) { Log.w(TAG, "Firebase signOut failed: ${e.message}") }
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
+    }
+
+    // ---------------------------
+    // Public navigation helpers
+    // HomeFragment should call these instead of doing fragment transaction itself
+    // ---------------------------
+
+    /**
+     * Open the Attendance screen.
+     * Loads `AttendanceFragment` into the fragment container if present; otherwise starts `AttendanceManagementActivity`.
+     * Also calls setResult(...) with an "opened" extra so callers can observe what was opened.
+     */
+    fun openAttendance() {
+        try {
+            if (hasFragmentContainer) {
+                loadFragmentSafe(AttendanceFragment(), addToBackStack = true)
+            } else {
+                startActivity(Intent(this, AttendanceManagementActivity::class.java))
+            }
+            // inform caller (if this HomeActivity was started for result) what we opened
+            setActivityOpenedResult("attendance")
+        } catch (ex: Exception) {
+            Log.e(TAG, "openAttendance failed", ex)
+            Toast.makeText(this, "Unable to open Attendance", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Open the Events screen.
+     */
+    fun openEvents() {
+        try {
+            if (hasFragmentContainer) {
+                loadFragmentSafe(EventsFragment(), addToBackStack = true)
+            } else {
+                startActivity(Intent(this, EventsFragment::class.java)) // optional activity fallback
+            }
+            setActivityOpenedResult("events")
+        } catch (ex: Exception) {
+            Log.e(TAG, "openEvents failed", ex)
+            Toast.makeText(this, "Unable to open Events", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Open the Payments screen.
+     */
+    fun openPayments() {
+        try {
+            if (hasFragmentContainer) {
+                loadFragmentSafe(PaymentsFragment(), addToBackStack = true)
+            } else {
+                startActivity(Intent(this, PaymentsFragment::class.java)) // optional fallback
+            }
+            setActivityOpenedResult("payments")
+        } catch (ex: Exception) {
+            Log.e(TAG, "openPayments failed", ex)
+            Toast.makeText(this, "Unable to open Payments", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Open Messages screen (if implemented) or show a friendly message.
+     */
+    fun openMessages() {
+        try {
+            if (hasFragmentContainer) {
+                // If you add MessagesFragment in your project, replace the Toast with the fragment below:
+                // loadFragmentSafe(MessagesFragment(), addToBackStack = true)
+                // For now show a small placeholder behavior:
+                Toast.makeText(this, "Messages not implemented yet.", Toast.LENGTH_SHORT).show()
+            } else {
+                // placeholder activity fallback
+                Toast.makeText(this, "Messages not implemented yet.", Toast.LENGTH_SHORT).show()
+            }
+            setActivityOpenedResult("messages")
+        } catch (ex: Exception) {
+            Log.e(TAG, "openMessages failed", ex)
+            Toast.makeText(this, "Unable to open Messages", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Send a small result Intent so a parent activity (if any) can detect which quick action was opened.
+     * This mirrors "returning results" behavior — harmless if nobody is listening.
+     */
+    private fun setActivityOpenedResult(opened: String) {
+        try {
+            val resultIntent = Intent().apply {
+                putExtra("opened", opened)
+            }
+            setResult(Activity.RESULT_OK, resultIntent)
+        } catch (ex: Exception) {
+            Log.w(TAG, "setActivityOpenedResult failed: ${ex.message}")
+        }
     }
 }
