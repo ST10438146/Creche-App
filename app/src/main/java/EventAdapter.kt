@@ -6,8 +6,10 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class EventAdapter(private val eventList: List<Event>) :
-    RecyclerView.Adapter<EventAdapter.EventViewHolder>() {
+class EventAdapter(
+    private val eventList: MutableList<Event>,
+    private val onItemClick: (Event) -> Unit
+) : RecyclerView.Adapter<EventAdapter.EventViewHolder>() {
 
     class EventViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvEventTitle: TextView = itemView.findViewById(R.id.tvEventTitle)
@@ -28,8 +30,12 @@ class EventAdapter(private val eventList: List<Event>) :
         holder.tvEventTitle.text = event.title
         holder.tvEventDate.text = "Date: ${event.date}"
         holder.tvEventTime.text = "Time: ${event.time}"
-        holder.tvEventLocation.text = "Location: ${event.location}"
+        holder.tvEventLocation.text = event.location.ifEmpty { "Location: - " }
         holder.tvEventDescription.text = event.description
+
+        holder.itemView.setOnClickListener {
+            onItemClick(event)
+        }
     }
 
     override fun getItemCount(): Int = eventList.size

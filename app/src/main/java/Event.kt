@@ -1,11 +1,14 @@
 package vcmsa.projects.crechemanagementapp
 
+import com.google.firebase.firestore.IgnoreExtraProperties
+
+@IgnoreExtraProperties
 data class Event(
-    val id: String = "",
-    val title: String = "",
-    val description: String = "",
-    val date: String = "", // Format "yyyy-MM-dd"
-    val time: String = "", // Format "HH:mm"
-    val location: String = "",
-    val createdAt: Long = System.currentTimeMillis()
+    var id: String = "",
+    var title: String = "",
+    var description: String = "",
+    var date: String = "",   // "yyyy-MM-dd"
+    var time: String = "",   // "HH:mm"
+    var location: String = "",
+    var createdAt: Long = System.currentTimeMillis()
 )

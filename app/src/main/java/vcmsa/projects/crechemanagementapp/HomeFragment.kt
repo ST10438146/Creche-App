@@ -9,12 +9,15 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import java.text.SimpleDateFormat
+import java.util.*
 
 class HomeFragment : Fragment() {
 
@@ -35,6 +38,11 @@ class HomeFragment : Fragment() {
     private lateinit var llQuickMessages: View
 
     private var userListener: ListenerRegistration? = null
+
+    // New: upcoming events list + listener
+    private val upcomingEvents = mutableListOf<Event>()
+    private lateinit var eventsAdapter: EventAdapter
+    private var eventsListener: ListenerRegistration? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_home, container, false)
@@ -60,7 +68,8 @@ class HomeFragment : Fragment() {
         llQuickPayments = view.findViewById(R.id.llQuickPayments)
         llQuickMessages = view.findViewById(R.id.llQuickMessages)
 
-        setupRecentActivities()
+        setupRecentActivities() // now shows upcoming events
+        setupQuickActionListeners()
 
         val uid = firebaseAuth.currentUser?.uid
         if (uid == null) {
@@ -76,9 +85,6 @@ class HomeFragment : Fragment() {
             tvWelcome.text = "Welcome back, ${cached.name}!"
             setupQuickStatsForRole(cached.role, cached.id)
         }
-
-        // Setup quick-action click listeners (safe navigation)
-        setupQuickActionListeners()
 
         // Listen to user document for live updates (single listener)
         userListener = firestoreDb.collection("users").document(uid)
@@ -130,8 +136,6 @@ class HomeFragment : Fragment() {
                     .addToBackStack(null)
                     .commit()
             } else {
-                // No fragment container — fallback to Activity (adjust as needed)
-                // For now show a short toast; replace with startActivity(...) if you have activities.
                 Toast.makeText(requireContext(), "Opening screen...", Toast.LENGTH_SHORT).show()
             }
         }
@@ -143,7 +147,6 @@ class HomeFragment : Fragment() {
                 if (host is HomeActivity) {
                     host.openAttendance()
                 } else {
-                    // fallback (same as before)
                     parentFragmentManager.beginTransaction()
                         .setReorderingAllowed(true)
                         .replace(R.id.fragmentContainer, AttendanceFragment())
@@ -156,7 +159,7 @@ class HomeFragment : Fragment() {
             }
         }
 
-// Events quick action
+        // Events quick action
         llQuickEvents.setOnClickListener {
             val host = activity
             if (host is HomeActivity) {
@@ -170,7 +173,7 @@ class HomeFragment : Fragment() {
             }
         }
 
-// Payments quick action
+        // Payments quick action
         llQuickPayments.setOnClickListener {
             val host = activity
             if (host is HomeActivity) {
@@ -184,7 +187,7 @@ class HomeFragment : Fragment() {
             }
         }
 
-// Messages quick action
+        // Messages quick action
         llQuickMessages.setOnClickListener {
             val host = activity
             if (host is HomeActivity) {
@@ -193,7 +196,6 @@ class HomeFragment : Fragment() {
                 Toast.makeText(requireContext(), "Messages not implemented yet.", Toast.LENGTH_SHORT).show()
             }
         }
-
     }
 
     private fun setupQuickStatsForRole(rawRole: String, userId: String) {
@@ -223,7 +225,7 @@ class HomeFragment : Fragment() {
                     val childrenCount = children.size()
                     firestoreDb.collection("events").get().addOnSuccessListener { events ->
                         val activitiesCount = events.size()
-                        tvQuickStats.text = "$childrenCount children present • $activitiesCount activities scheduled"
+                        tvQuickStats.text = "$childrenCount children present • $activitiesCount events scheduled"
                     }.addOnFailureListener { ex ->
                         Log.w(TAG, "Error loading events count", ex)
                     }
@@ -248,15 +250,88 @@ class HomeFragment : Fragment() {
         }
     }
 
+    /**
+     * Previously "Recent Activities" — now shows upcoming events / notices.
+     * Shows the next 5 upcoming events with a realtime listener.
+     */
     private fun setupRecentActivities() {
         rvRecentActivities.layoutManager = LinearLayoutManager(context)
-        // TODO: set adapter and populate recent activity items
+
+        eventsAdapter = EventAdapter(upcomingEvents, { event ->
+            // On click, show details
+            showEventDetailsDialog(event)
+        })
+        rvRecentActivities.adapter = eventsAdapter
+
+        // Query: events with date >= today (date stored as "yyyy-MM-dd"), ordered by date/time
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val todayStr = sdf.format(Calendar.getInstance().time)
+
+        // Listen for upcoming events (limit to next 5)
+        eventsListener = firestoreDb.collection("events")
+            .whereGreaterThanOrEqualTo("date", todayStr)
+            .orderBy("date")
+            .orderBy("time")
+            .limit(5)
+            .addSnapshotListener { snapshots, e ->
+                if (e != null) {
+                    Log.e(TAG, "Error loading upcoming events", e)
+                    return@addSnapshotListener
+                }
+
+                if (snapshots != null) {
+                    upcomingEvents.clear()
+                    for (doc in snapshots.documents) {
+                        val event = doc.toObject(Event::class.java)
+                        event?.let { upcomingEvents.add(it) }
+                    }
+                    eventsAdapter.notifyDataSetChanged()
+
+                    // If no upcoming events show a subtle placeholder item (optional toast)
+                    if (upcomingEvents.isEmpty()) {
+                        // You might prefer to show an empty state view in the UI instead
+                        Log.d(TAG, "No upcoming events found")
+                    }
+                }
+            }
+    }
+
+    private fun showEventDetailsDialog(event: Event) {
+        val message = StringBuilder()
+            .append("Date: ").append(event.date).append("\n")
+            .append("Time: ").append(event.time).append("\n")
+            .append("Location: ").append(event.location.ifEmpty { "-" }).append("\n\n")
+            .append(event.description)
+            .toString()
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(event.title.ifEmpty { "Event" })
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .setNegativeButton("Open Events") { _, _ ->
+                // Open full Events screen for more context
+                val host = activity
+                if (host is HomeActivity) {
+                    host.openEvents()
+                } else {
+                    parentFragmentManager.beginTransaction()
+                        .setReorderingAllowed(true)
+                        .replace(R.id.fragmentContainer, EventsFragment())
+                        .addToBackStack(null)
+                        .commit()
+                }
+            }
+            .show()
     }
 
     override fun onDestroyView() {
-        // remove listener to avoid leaks and repeated updates
+        // remove listeners to avoid leaks and repeated updates
         userListener?.remove()
         userListener = null
+
+        eventsListener?.remove()
+        eventsListener = null
+
         super.onDestroyView()
     }
 }

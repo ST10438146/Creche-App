@@ -245,7 +245,7 @@ class LoginActivity : AppCompatActivity() {
     // Route users: ADMIN -> AdminHomeActivity, STAFF/PARENT -> HomeActivity
     private fun navigateToHome(role: UserRole) {
         when (role) {
-            UserRole.ADMIN -> startActivity(Intent(this, AdminHomeActivity::class.java))
+            UserRole.ADMIN -> startActivity(Intent(this, AdminDashboardActivity::class.java))
             UserRole.STAFF, UserRole.PARENT -> startActivity(Intent(this, HomeActivity::class.java))
         }
         finish()
