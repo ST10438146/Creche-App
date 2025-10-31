@@ -76,8 +76,18 @@ class PaymentsFragment : Fragment() {
 
     private fun setupClickListeners() {
         btnMakePayment.setOnClickListener {
-            showPaymentDialog() // This will now interact with Firestore to record payment
+            val amount = "350.00"
+            val itemName = "November Creche Fees"
+            val itemDesc = "Monthly creche payment"
+            val email = FirebaseAuth.getInstance().currentUser?.email ?: "parent@gmail.com"
+
+            val paymentUrl = PayFastHelper.buildPayFastUrl(amount, itemName, itemDesc, email)
+
+            val intent = Intent(requireContext(), WebViewPayActivity::class.java)
+            intent.putExtra("PAYFAST_URL", paymentUrl)
+            startActivity(intent)
         }
+
     }
 
     /**
@@ -167,7 +177,7 @@ class PaymentsFragment : Fragment() {
 
         // Your server endpoint that returns { payfastUrl, payload, signature }
         val request = Request.Builder()
-            .url("https://payfast-sever.onrender.com/create-payfast-payment")
+            .url("https://crecheconnectpayfastserver20251030090609-g5haf5fha0brhaa9.southafricanorth-01.azurewebsites.net")
             .post(requestBody)
             .build()
 
@@ -201,9 +211,10 @@ class PaymentsFragment : Fragment() {
                     // Launch WebView activity
                     activity?.runOnUiThread {
                         val intent = Intent(requireContext(), WebViewPayActivity::class.java)
-                        intent.putExtra(WebViewPayActivity.EXTRA_HTML_FORM, htmlForm)
+                        intent.putExtra("PAYFAST_URL", payfastUrl)
                         startActivityForResult(intent, REQUEST_PAYFAST)
                     }
+
                 }
             }
         })

@@ -1,34 +1,16 @@
 package vcmsa.projects.crechemanagementapp
 
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.Intent
-import android.graphics.Bitmap
 import android.os.Bundle
-import android.view.View
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
-/**
- * WebViewPayActivity
- * -------------------
- * Displays PayFast payment form and detects when the payment
- * is successful or canceled, returning the result to PaymentsFragment.
- */
 class WebViewPayActivity : AppCompatActivity() {
 
-    companion object {
-        const val EXTRA_HTML_FORM = "html_form"
-        const val RESULT_SUCCESS = Activity.RESULT_OK
-        const val RESULT_FAILURE = Activity.RESULT_CANCELED
-    }
-
     private lateinit var webView: WebView
-    private lateinit var progressBar: ProgressBar
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,63 +18,60 @@ class WebViewPayActivity : AppCompatActivity() {
         setContentView(R.layout.activity_webview_pay)
 
         webView = findViewById(R.id.webView)
-        progressBar = findViewById(R.id.progressBar)
-
-        val htmlForm = intent.getStringExtra(EXTRA_HTML_FORM)
-        if (htmlForm.isNullOrEmpty()) {
-            Toast.makeText(this, "Payment form missing.", Toast.LENGTH_LONG).show()
-            finish()
-            return
-        }
-
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         webView.settings.loadWithOverviewMode = true
         webView.settings.useWideViewPort = true
 
+        val htmlContent = intent.getStringExtra("htmlContent")
+        val paymentUrl = intent.getStringExtra("PAYFAST_URL")
+
+        // Configure WebView client (works across all SDKs)
         webView.webViewClient = object : WebViewClient() {
-            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                progressBar.visibility = View.VISIBLE
-                super.onPageStarted(view, url, favicon)
-            }
 
-            override fun onPageFinished(view: WebView?, url: String?) {
-                progressBar.visibility = View.GONE
-                super.onPageFinished(view, url)
-            }
-
+            // For Android 21+
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                val url = request?.url.toString()
+                val url = request?.url?.toString() ?: ""
+                return handleUrl(url)
+            }
+
+            // For Android <21
+            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                return handleUrl(url ?: "")
+            }
+
+            private fun handleUrl(url: String): Boolean {
                 when {
-                    url.contains("payment/success", true) -> {
-                        Toast.makeText(applicationContext, "Payment successful!", Toast.LENGTH_SHORT).show()
-                        val resultIntent = Intent()
-                        resultIntent.putExtra("payment_status", "success")
-                        setResult(RESULT_SUCCESS, resultIntent)
+                    url.contains("cancel", ignoreCase = true) -> {
+                        Toast.makeText(this@WebViewPayActivity, "Payment cancelled.", Toast.LENGTH_SHORT).show()
                         finish()
                         return true
                     }
 
-                    url.contains("payment/cancel", true) -> {
-                        Toast.makeText(applicationContext, "Payment cancelled.", Toast.LENGTH_SHORT).show()
-                        val resultIntent = Intent()
-                        resultIntent.putExtra("payment_status", "cancel")
-                        setResult(RESULT_FAILURE, resultIntent)
-                        finish()
-                        return true
+                    url.contains("return", ignoreCase = true) ||
+                            url.contains("success", ignoreCase = true) -> {
+                        Toast.makeText(this@WebViewPayActivity, "Payment completed! Thank you.", Toast.LENGTH_SHORT).show()
+                        // Keep page open; optionally trigger backend verification here.
+                        return false
                     }
 
-                    else -> return false
+                    else -> return false // Continue loading normally
                 }
             }
         }
 
-        // Load and auto-submit PayFast form
-        webView.loadDataWithBaseURL(null, htmlForm, "text/html", "utf-8", null)
-    }
-
-    override fun onBackPressed() {
-        setResult(RESULT_FAILURE)
-        super.onBackPressed()
+        // ✅ Priority 1: If backend sends full PayFast URL (redirect)
+        if (!paymentUrl.isNullOrEmpty()) {
+            webView.loadUrl(paymentUrl)
+        }
+        // ✅ Fallback: If backend sends an HTML auto-post form instead
+        else if (!htmlContent.isNullOrEmpty()) {
+            webView.loadDataWithBaseURL(null, htmlContent, "text/html", "UTF-8", null)
+        }
+        // ✅ Neither provided
+        else {
+            Toast.makeText(this, "No payment information found.", Toast.LENGTH_SHORT).show()
+            finish()
+        }
     }
 }
