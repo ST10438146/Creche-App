@@ -266,13 +266,8 @@ class HomeActivity : AppCompatActivity() {
     fun openMessages() {
         try {
             if (hasFragmentContainer) {
-                // If you add MessagesFragment in your project, replace the Toast with the fragment below:
-                // loadFragmentSafe(MessagesFragment(), addToBackStack = true)
-                // For now show a small placeholder behavior:
-                Toast.makeText(this, "Messages not implemented yet.", Toast.LENGTH_SHORT).show()
-            } else {
-                // placeholder activity fallback
-                Toast.makeText(this, "Messages not implemented yet.", Toast.LENGTH_SHORT).show()
+                //Load the real MessagesFragment
+                loadFragmentSafe(MessagesFragment(), addToBackStack = true)
             }
             setActivityOpenedResult("messages")
         } catch (ex: Exception) {
@@ -280,6 +275,7 @@ class HomeActivity : AppCompatActivity() {
             Toast.makeText(this, "Unable to open Messages", Toast.LENGTH_SHORT).show()
         }
     }
+
 
     /**
      * Send a small result Intent so a parent activity (if any) can detect which quick action was opened.

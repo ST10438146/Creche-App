@@ -193,9 +193,14 @@ class HomeFragment : Fragment() {
             if (host is HomeActivity) {
                 host.openMessages()
             } else {
-                Toast.makeText(requireContext(), "Messages not implemented yet.", Toast.LENGTH_SHORT).show()
+                parentFragmentManager.beginTransaction()
+                    .setReorderingAllowed(true)
+                    .replace(R.id.fragmentContainer, MessagesFragment())
+                    .addToBackStack(null)
+                    .commit()
             }
         }
+
     }
 
     private fun setupQuickStatsForRole(rawRole: String, userId: String) {
